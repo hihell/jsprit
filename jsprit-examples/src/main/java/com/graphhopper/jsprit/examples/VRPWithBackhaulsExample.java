@@ -33,7 +33,12 @@ import com.graphhopper.jsprit.util.Examples;
 import java.util.Collection;
 
 
+
+
 public class VRPWithBackhaulsExample {
+
+    public static String exampleBase = "/Users/jiusi/IdeaProjects/jsprit/jsprit-examples/";
+
 
     public static void main(String[] args) {
 
@@ -52,7 +57,7 @@ public class VRPWithBackhaulsExample {
 		/*
          * A solomonReader reads solomon-instance files, and stores the required information in the builder.
 		 */
-        new VrpXMLReader(vrpBuilder).read("input/pickups_and_deliveries_solomon_r101.xml");
+        new VrpXMLReader(vrpBuilder).read(exampleBase + "/input/pickups_and_deliveries_solomon_r101.xml");
 
 		/*
          * Finally, the problem can be built. By default, transportCosts are crowFlyDistances (as usually used for vrp-instances).
@@ -67,7 +72,7 @@ public class VRPWithBackhaulsExample {
 		 *
 		 * The algorithm can be defined and configured in an xml-file.
 		 */
-        VehicleRoutingAlgorithmBuilder vraBuilder = new VehicleRoutingAlgorithmBuilder(vrp, "input/algorithmConfig_solomon.xml");
+        VehicleRoutingAlgorithmBuilder vraBuilder = new VehicleRoutingAlgorithmBuilder(vrp, exampleBase + "/input/algorithmConfig_solomon.xml");
         vraBuilder.addCoreConstraints();
         vraBuilder.addDefaultCostCalculators();
         StateManager stateManager = new StateManager(vrp);
@@ -75,7 +80,7 @@ public class VRPWithBackhaulsExample {
         constraintManager.addConstraint(new ServiceDeliveriesFirstConstraint(), ConstraintManager.Priority.CRITICAL);
         vraBuilder.setStateAndConstraintManager(stateManager, constraintManager);
         VehicleRoutingAlgorithm vra = vraBuilder.build();
-        vra.getAlgorithmListeners().addListener(new AlgorithmSearchProgressChartListener("output/sol_progress.png"));
+        vra.getAlgorithmListeners().addListener(new AlgorithmSearchProgressChartListener(exampleBase + "/output/sol_progress.png"));
         /*
          * Solve the problem.
 		 *

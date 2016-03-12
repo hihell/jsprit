@@ -41,6 +41,8 @@ import java.util.Collection;
 
 public class VRPWithBackhaulsExample2 {
 
+    public static String exampleBase = "/Users/jiusi/IdeaProjects/jsprit/jsprit-examples/";
+
     public static void main(String[] args) {
 
 		/*
@@ -58,7 +60,7 @@ public class VRPWithBackhaulsExample2 {
 		/*
          * A solomonReader reads solomon-instance files, and stores the required information in the builder.
 		 */
-        new VrpXMLReader(vrpBuilder).read("input/pd_christophides_vrpnc1_vcap50.xml");
+        new VrpXMLReader(vrpBuilder).read(exampleBase + "/input/pd_christophides_vrpnc1_vcap50.xml");
 
 
 		/*
@@ -94,7 +96,7 @@ public class VRPWithBackhaulsExample2 {
             .setProperty(Jsprit.Parameter.FIXED_COST_PARAM.toString(), "0.")
             .buildAlgorithm();
         vra.setMaxIterations(2000);
-        vra.addListener(new AlgorithmSearchProgressChartListener("output/search"));
+        vra.addListener(new AlgorithmSearchProgressChartListener(exampleBase + "/output/search"));
 
 
 
@@ -121,7 +123,7 @@ public class VRPWithBackhaulsExample2 {
 //		SolutionPlotter.plotSolutionAsPNG(vrp, solution, "output/pd_solomon_r101_solution.png","pd_r101");
         Plotter plotter = new Plotter(vrp, solution);
 //		plotter.setLabel(Plotter.Label.SIZE);
-        plotter.plot("output/vrpwbh_christophides_vrpnc1_solution.png", "vrpwbh_vrpnc1");
+        plotter.plot(exampleBase + "/output/vrpwbh_christophides_vrpnc1_solution.png", "vrpwbh_vrpnc1");
 
         SolutionAnalyser analyser = new SolutionAnalyser(vrp, solution, new TransportDistance() {
 
