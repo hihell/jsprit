@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<problem xmlns="http://www.w3schools.com"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.w3schools.com vrp_xml_schema.xsd">
+    <problemType>
+        <fleetSize>INFINITE</fleetSize>
+        <fleetComposition>HOMOGENEOUS</fleetComposition>
+    </problemType>
+    <vehicles>
+        <vehicle>
+            <id>solomonVehicle</id>
+            <typeId>solomonType</typeId>
+            <location>
+                <id>0</id>
+                <coord x="35.0" y="35.0"/>
+            </location>
+            <timeSchedule>
+                <start>0.0</start>
+                <end>230.0</end>
+            </timeSchedule>
+            <returnToDepot>false</returnToDepot>
+        </vehicle>
+    </vehicles>
+    <vehicleTypes>
+        <type>
+            <id>solomonType</id>
+            <capacity>200</capacity>
+            <costs>
+                <fixed>0.0</fixed>
+                <distance>1.0</distance>
+                <time>0.0</time>
+            </costs>
+        </type>
+    </vehicleTypes>
+    <services>
+        <service id="35" type="delivery">
+            <locationId>[x=63.0][y=65.0]</locationId>
+            <coord x="63.0" y="65.0"/>
+            <capacity-demand>8</capacity-demand>
+            <duration>10.0</duration>
+            <timeWindows>
+                <timeWindow>
+                    <start>143.0</start>
+                    <end>153.0</end>
+                </timeWindow>
+            </timeWindows>
+        </service>
+        <service id="36" type="pickup">
+            <locationId>[x=2.0][y=60.0]</locationId>
+            <coord x="2.0" y="60.0"/>
+            <capacity-demand>5</capacity-demand>
+            <duration>10.0</duration>
+            <timeWindows>
+                <timeWindow>
+                    <start>41.0</start>
+                    <end>51.0</end>
+                </timeWindow>
+            </timeWindows>
+        </service>
+
+    </services>
+</problem>

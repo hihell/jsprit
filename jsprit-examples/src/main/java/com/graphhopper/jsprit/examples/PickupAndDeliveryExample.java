@@ -36,6 +36,8 @@ import java.util.Collection;
 
 public class PickupAndDeliveryExample {
 
+    public static String exampleBase = "/Users/jiusi/IdeaProjects/jsprit/jsprit-examples/";
+
     public static void main(String[] args) {
 
 		/*
@@ -53,15 +55,15 @@ public class PickupAndDeliveryExample {
 		/*
          * A solomonReader reads solomon-instance files, and stores the required information in the builder.
 		 */
-        new VrpXMLReader(vrpBuilder).read("input/pickups_and_deliveries_solomon_r101_withoutTWs.xml");
-
+//        new VrpXMLReader(vrpBuilder).read(exampleBase + "/input/pickups_and_deliveries_solomon_r101_withoutTWs.xml");
+        new VrpXMLReader(vrpBuilder).read(exampleBase + "input/pickups_and_deliveries_solomon_r101_simple.xml");
 		/*
          * Finally, the problem can be built. By default, transportCosts are crowFlyDistances (as usually used for vrp-instances).
 		 */
 
         final VehicleRoutingProblem vrp = vrpBuilder.build();
 
-        new Plotter(vrp).plot("output/pd_solomon_r101.png", "pd_r101");
+        new Plotter(vrp).plot(exampleBase + "output/pd_solomon_r101.png", "pd_r101");
 
 
 		/*
@@ -70,8 +72,8 @@ public class PickupAndDeliveryExample {
 		 * The algorithm can be defined and configured in an xml-file.
 		 */
 //		VehicleRoutingAlgorithm vra = new SchrimpfFactory().createAlgorithm(vrp);
-        VehicleRoutingAlgorithm vra = VehicleRoutingAlgorithms.readAndCreateAlgorithm(vrp, "input/algorithmConfig_solomon.xml");
-        vra.getAlgorithmListeners().addListener(new AlgorithmSearchProgressChartListener("output/sol_progress.png"));
+        VehicleRoutingAlgorithm vra = VehicleRoutingAlgorithms.readAndCreateAlgorithm(vrp, exampleBase + "/input/algorithmConfig_solomon.xml");
+        vra.getAlgorithmListeners().addListener(new AlgorithmSearchProgressChartListener(exampleBase + "/output/sol_progress.png"));
         /*
          * Solve the problem.
 		 *
@@ -95,7 +97,7 @@ public class PickupAndDeliveryExample {
 //		SolutionPlotter.plotSolutionAsPNG(vrp, solution, "output/pd_solomon_r101_solution.png","pd_r101");
         Plotter plotter = new Plotter(vrp, solution);
         plotter.setLabel(Label.SIZE);
-        plotter.plot("output/pd_solomon_r101_solution.png", "pd_r101");
+        plotter.plot(exampleBase + "output/pd_solomon_r101_solution.png", "pd_r101");
 
         //some stats
         SolutionAnalyser analyser = new SolutionAnalyser(vrp, solution, new TransportDistance() {

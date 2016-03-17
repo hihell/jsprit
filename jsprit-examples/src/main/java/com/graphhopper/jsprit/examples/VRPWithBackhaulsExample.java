@@ -39,7 +39,6 @@ public class VRPWithBackhaulsExample {
 
     public static String exampleBase = "/Users/jiusi/IdeaProjects/jsprit/jsprit-examples/";
 
-
     public static void main(String[] args) {
 
 		/*
@@ -75,17 +74,19 @@ public class VRPWithBackhaulsExample {
         VehicleRoutingAlgorithmBuilder vraBuilder = new VehicleRoutingAlgorithmBuilder(vrp, exampleBase + "/input/algorithmConfig_solomon.xml");
         vraBuilder.addCoreConstraints();
         vraBuilder.addDefaultCostCalculators();
+
+
         StateManager stateManager = new StateManager(vrp);
+
         ConstraintManager constraintManager = new ConstraintManager(vrp, stateManager);
+
         constraintManager.addConstraint(new ServiceDeliveriesFirstConstraint(), ConstraintManager.Priority.CRITICAL);
         vraBuilder.setStateAndConstraintManager(stateManager, constraintManager);
         VehicleRoutingAlgorithm vra = vraBuilder.build();
         vra.getAlgorithmListeners().addListener(new AlgorithmSearchProgressChartListener(exampleBase + "/output/sol_progress.png"));
         /*
          * Solve the problem.
-		 *
-		 *
-		 */
+		 * */
         Collection<VehicleRoutingProblemSolution> solutions = vra.searchSolutions();
 
 		/*
