@@ -24,4 +24,6 @@ public interface ForwardTransportCost {
 
     public double getTransportCost(Location from, Location to, double departureTime, Driver driver, Vehicle vehicle);
 
+
+
 }

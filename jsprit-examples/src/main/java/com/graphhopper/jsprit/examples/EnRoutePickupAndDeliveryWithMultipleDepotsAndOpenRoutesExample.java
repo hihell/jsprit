@@ -85,7 +85,11 @@ public class EnRoutePickupAndDeliveryWithMultipleDepotsAndOpenRoutesExample {
 
 		 */
 
-        Shipment shipment1 = Shipment.Builder.newInstance("1").addSizeDimension(0, 1).setPickupLocation(loc(Coordinate.newInstance(5, 7))).setDeliveryLocation(loc(Coordinate.newInstance(6, 9))).build();
+        Shipment shipment1 = Shipment.Builder.newInstance("1")
+            .addSizeDimension(0, 1)
+            .setPickupLocation(loc(Coordinate.newInstance(5, 7)))
+            .setDeliveryLocation(loc(Coordinate.newInstance(6, 9)))
+            .build();
         Shipment shipment2 = Shipment.Builder.newInstance("2").addSizeDimension(0, 1).setPickupLocation(loc(Coordinate.newInstance(5, 13))).setDeliveryLocation(loc(Coordinate.newInstance(6, 11))).build();
 
         Shipment shipment3 = Shipment.Builder.newInstance("3").addSizeDimension(0, 1).setPickupLocation(loc(Coordinate.newInstance(15, 7))).setDeliveryLocation(loc(Coordinate.newInstance(14, 9))).build();

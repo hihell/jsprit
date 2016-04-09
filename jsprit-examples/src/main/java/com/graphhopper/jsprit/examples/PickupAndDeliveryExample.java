@@ -116,7 +116,6 @@ public class PickupAndDeliveryExample {
         System.out.println("#picks: " + analyser.getNumberOfPickups());
         System.out.println("#deliveries: " + analyser.getNumberOfDeliveries());
 
-
     }
 
 }

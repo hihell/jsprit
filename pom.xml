@@ -153,7 +153,7 @@
                             <rules>
                                 <requireMavenVersion>
                                     Some plugin features require a recent Maven runtime to work properly
-                                    <message>Current version of Maven ${maven.version} required to build the project
+                                    <message>Current version of Maven I don't fucking know required to build the project
                                         should be ${project.prerequisites.maven}, or higher!
                                     </message>
                                     <version>[${project.prerequisites.maven},)</version>
@@ -285,6 +285,11 @@
             <version>${logger.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.6</version>
+        </dependency>
 
     </dependencies>
 
