@@ -206,6 +206,15 @@ public class VehicleRoute {
             return addService(pickup);
         }
 
+        public Builder addPickups(ArrayList<Pickup> pickups) {
+            for (Pickup pickup : pickups) {
+                if (pickup == null) throw new IllegalArgumentException("pickup must not be null");
+                addService(pickup);
+            }
+
+            return this;
+        }
+
         public Builder addPickup(Pickup pickup, TimeWindow timeWindow) {
             if (pickup == null) throw new IllegalArgumentException("pickup must not be null");
             return addService(pickup,timeWindow);
@@ -220,6 +229,15 @@ public class VehicleRoute {
         public Builder addDelivery(Delivery delivery) {
             if (delivery == null) throw new IllegalArgumentException("delivery must not be null");
             return addService(delivery);
+        }
+
+        public Builder addDeliveries(ArrayList<Delivery> deliveries) {
+            for (Delivery d : deliveries) {
+                if (d == null) throw new IllegalArgumentException("delivery must not be null");
+                addService(d);
+            }
+
+            return this;
         }
 
         public Builder addDelivery(Delivery delivery, TimeWindow timeWindow) {

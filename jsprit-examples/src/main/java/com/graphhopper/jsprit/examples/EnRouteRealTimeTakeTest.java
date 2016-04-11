@@ -24,7 +24,7 @@ public class EnRouteRealTimeTakeTest {
         ArrayList<double[]> pickupLocs = new ArrayList<double[]>();
         pickupLocs.add(new double[]{116.466414, 39.912085}); // 建外soho
         ArrayList<double[]> pickupTimeWindowTSs = new ArrayList<double[]>();
-        pickupTimeWindowTSs.add(new double[]{1459998630.0, 1459999230.0}); // 11:10, 11:40
+        pickupTimeWindowTSs.add(new double[]{1459998630.0, 1460000400}); // 11:10, 11:40
 
         ArrayList<double[]> deliverLocs = new ArrayList<double[]>();
         deliverLocs.add(new double[]{116.479349, 39.929336}); // 摩码大厦
@@ -69,10 +69,11 @@ public class EnRouteRealTimeTakeTest {
         // 这个人从现代城鲜花店到朝阳区人民政府,送花,应该接上途中那个往西的快递
         // 现在位置是光华路东侧路口,和三环交界,他的位置上有个新快递,但是方向是往西的
 
+        // picked-ups
         ArrayList<double[]> pickupLocs = new ArrayList<double[]>();
         pickupLocs.add(new double[]{116.482862, 39.912448}); // 现代城鲜花店
         ArrayList<double[]> pickupTimeWindowTSs = new ArrayList<double[]>();
-        pickupTimeWindowTSs.add(new double[]{1459998630.0, 1459999230.0}); // 11:10, 11:40
+        pickupTimeWindowTSs.add(new double[]{1459998630.0, 1460000400}); // 11:10, 11:40
 
         ArrayList<double[]> deliverLocs = new ArrayList<double[]>();
         deliverLocs.add(new double[]{116.45001, 39.927189}); // 朝阳区人民政府
@@ -90,7 +91,7 @@ public class EnRouteRealTimeTakeTest {
         // 2. on going pickup No on going pickup
 
         return new EnRouteVehicleContext(
-            "bike1", currentTimestamp, //11:40
+            "bike2", currentTimestamp, //11:40
             new double[]{116.468354, 39.919238}, // 光华路东侧路口
 
             pickupLocs, deliverLocs,
@@ -147,7 +148,7 @@ public class EnRouteRealTimeTakeTest {
         double[] pickupLoc = {116.467295, 39.919685}; // 嘉里中心
         double[] pickupTW = {1459998024.0, 1459999800}; // 11:00, 11:30
         double[] deliverLoc = {116.452471, 39.919293}; // 日坛商务楼
-        double[] deliverTW = {1459998024.0, 1460007000}; // 11:00, 13:00
+        double[] deliverTW = {1459998024.0, 1460005200}; // 11:00, 13:00
 
         String customerName =  "嘉里中心 Ovelia de la Wang";
         String customerPhone = "456";
@@ -170,7 +171,7 @@ public class EnRouteRealTimeTakeTest {
         货物会分配给离得不太远但是方向对的快递员,而不会分配给最近的那个快递员,已达到cost最小的结果
          */
 
-        double currentTimestamp = 1459999231; // 4-6 11:20
+        double currentTimestamp = 1459999200; // 4-7 11:20
 
         EnRouteRealTimeTakeTest t = new EnRouteRealTimeTakeTest();
         EnRouteVehicleContext bike1 = t.bike1(currentTimestamp);

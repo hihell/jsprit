@@ -16,9 +16,13 @@ import com.graphhopper.jsprit.core.algorithm.io.VehicleRoutingAlgorithms;
 import com.graphhopper.jsprit.core.problem.Location;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
 import com.graphhopper.jsprit.core.problem.io.VrpXMLWriter;
+import com.graphhopper.jsprit.core.problem.job.Delivery;
 import com.graphhopper.jsprit.core.problem.job.Pickup;
+import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem.Builder;
+
 import com.graphhopper.jsprit.core.problem.job.Shipment;
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
+import com.graphhopper.jsprit.core.problem.solution.route.VehicleRoute;
 import com.graphhopper.jsprit.core.problem.solution.route.activity.TimeWindow;
 import com.graphhopper.jsprit.core.problem.vehicle.Vehicle;
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleImpl;
@@ -29,6 +33,7 @@ import com.graphhopper.jsprit.core.util.Coordinate;
 import com.graphhopper.jsprit.core.util.Solutions;
 
 import com.graphhopper.jsprit.core.util.ManhattanCosts;
+import sun.jvm.hotspot.code.ConstantOopReadValue;
 
 /**
  * Created by jiusi on 16/4/1.
@@ -240,40 +245,26 @@ public class EnRouteRealTime {
     }
 
 
-
     public void realTimeProblemBuilder(ArrayList<EnRouteVehicleContext> vehicleContexts, ArrayList<Shipment> newShipments) {
         // 0. get all vehicle's status from API and make EnRouteContext
         // status: picked up, location, all pending plans
 
         // 1.1 build vehicles
 
-        ArrayList<VehicleImpl> vehicles = new ArrayList<VehicleImpl>();
-        for (int i = 0; i < vehicleContexts.size(); i++) {
-            EnRouteVehicleContext vehicleContext = vehicleContexts.get(i);
-            double[] crtLoc = vehicleContext.currentLoc;
 
-            VehicleTypeImpl.Builder vehicleTypeBuilder = VehicleTypeImpl.Builder.newInstance("bike")
-                .addCapacityDimension(0, 3);
-            vehicleTypeBuilder.setCostPerDistance(10.0);
-            VehicleType vehicleType = vehicleTypeBuilder.build();
 
-            String staffCurrentCoorStr = "bike:" + i + "@[" + crtLoc[0] + "," + crtLoc[1] + "]";
-            VehicleImpl.Builder vehicleBuilder = VehicleImpl.Builder.newInstance(staffCurrentCoorStr);
-            vehicleBuilder.setStartLocation(loc(Coordinate.newInstance(crtLoc[0], crtLoc[1]))).setReturnToDepot(false);
-            vehicleBuilder.setType(vehicleType);
-            vehicleBuilder.addSkill(vehicleContext.vehicleId); // make sure the going deli will only be taken by the vehicle
-            VehicleImpl vehicle = vehicleBuilder.build();
+        VehicleRoutingProblem.Builder vrpBuilder = VehicleRoutingProblem.Builder.newInstance();
 
-//            vehicleBuilder.set
-
-            vehicles.add(vehicle);
+        for(EnRouteVehicleContext ctx : vehicleContexts) {
+            vrpBuilder.addVehicle(ctx.vehicle);
         }
 
+        vrpBuilder.addAllJobs(newShipments);
 
         //  1.2 setup shipments
-        ArrayList<Shipment> shipments = new ArrayList<Shipment>();
 
         // 1.2.1 setup on going pick up
+
         for (int i = 0; i < vehicleContexts.size(); i++) {
             EnRouteVehicleContext vehicleContext = vehicleContexts.get(i);
             String vehicleId = vehicleContext.vehicleId;
@@ -286,9 +277,9 @@ public class EnRouteRealTime {
 
                 double[] deliTW = onGoingPickUp.deliverTimeWindowAlgo;
 
-                Shipment shipment = Shipment.Builder.newInstance(onGoingPickUp.customerName + ','
-                    + onGoingPickUp.customerPhone + ','
-                    + onGoingPickUp.customerAddress)
+                Shipment shipment = Shipment.Builder.newInstance(
+                        onGoingPickUp.customerName + ',' + onGoingPickUp.customerPhone + ',' + onGoingPickUp.customerAddress
+                    )
                     .addSizeDimension(0, 1)
                     .setPickupLocation(loc(Coordinate.newInstance(pickLoc[0], pickLoc[1])))
                     .setPickupTimeWindow(new TimeWindow(pickTW[0], pickTW[1]))
@@ -297,9 +288,14 @@ public class EnRouteRealTime {
                     .addRequiredSkill(vehicleId) // make sure this on going deli will only be taken by that vehicle
                     .build();
 
-                shipments.add(shipment);
-
+//                VehicleRoute initialRoute = VehicleRoute.Builder.newInstance(
+//                    vehicleContext.vehicle
+//                ).addPickup(shipment).addDelivery(shipment).build();
+//
+//                vrpBuilder.addInitialVehicleRoute(initialRoute);
+                vrpBuilder.addJob(shipment);
             }
+
         }
 
         //  1.2.2 setup picked-ups
@@ -309,41 +305,34 @@ public class EnRouteRealTime {
             String vehicleId = vehicleContext.vehicleId;
             ArrayList<EnRouteVehicleContext.ShipmentInfo> pickedUps = vehicleContext.pickedups;
 
-            double[] pickLoc = vehicleContext.currentLoc;
-
             for (int j = 0; j < pickedUps.size(); j++) {
                 EnRouteVehicleContext.ShipmentInfo pickedUp = pickedUps.get(j);
 
+                double[] pickUpLoc = pickedUp.pickupLoc;
+                double[] pickUpTW = pickedUp.pickupTimeWindowAlgo;
                 double[] deliLoc = pickedUp.deliverLoc;
                 double[] deliTW = pickedUp.deliverTimeWindowAlgo;
 
-                Shipment shipment = Shipment.Builder.newInstance(pickedUp.customerName + ',' + pickedUp.customerPhone + ',' + pickedUp.customerAddress)
+                Shipment shipment = Shipment.Builder.newInstance(
+                    pickedUp.customerName + ',' + pickedUp.customerPhone + ',' + pickedUp.customerAddress
+                )
                     .addSizeDimension(0, 1)
-                    .setPickupLocation(loc(Coordinate.newInstance(pickLoc[0], pickLoc[1])))
+                    .setPickupLocation(loc(Coordinate.newInstance(pickUpLoc[0], pickUpLoc[1])))
+                    .setPickupTimeWindow(new TimeWindow(pickUpTW[0], pickUpTW[1]))
                     .setDeliveryLocation(loc(Coordinate.newInstance(deliLoc[0], deliLoc[1])))
-                    .setDeliveryTimeWindow(new TimeWindow(deliTW[0], deliTW[1])) // set that fucking window
-                    .addRequiredSkill(vehicleId) // make sure this on going deli will only be taken by that vehicle
+                    .setDeliveryTimeWindow(new TimeWindow(deliTW[0], deliTW[1]))
+                    .addRequiredSkill(vehicleId)
                     .build();
 
-                shipments.add(shipment);
+                VehicleRoute initialRoute = VehicleRoute.Builder.newInstance(
+                    vehicleContext.vehicle
+                ).addPickup(shipment).addDelivery(shipment).build();
+
+                vrpBuilder.addInitialVehicleRoute(initialRoute);
             }
         }
 
-        // 1.2.3 setup non on going tasks
-        // non on going tasks are not context should not be in context section
-        shipments.addAll(newShipments);
-
-        // 2. build a vrp, add vehicles and shipments to it
-        VehicleRoutingProblem.Builder vrpBuilder = VehicleRoutingProblem.Builder.newInstance();
-        for (VehicleImpl v : vehicles) {
-            vrpBuilder.addVehicle(v);
-        }
-
-        for (Shipment s : shipments) {
-            vrpBuilder.addJob(s);
-        }
-
-//        vrpBuilder.setRoutingCost(new ManhattanCosts());
+        // 2 add shipment and deliveries to vrpBuilder
         vrpBuilder.setRoutingCost(new BaiduDistance());
 
         vrpBuilder.setFleetSize(VehicleRoutingProblem.FleetSize.FINITE);
@@ -374,7 +363,7 @@ public class EnRouteRealTime {
         new VrpXMLWriter(problem, solutions).write("output/shipment-problem-with-solution.xml");
 
 		/*
-		 * print nRoutes and totalCosts of bestSolution
+         * print nRoutes and totalCosts of bestSolution
 		 */
         SolutionPrinter.print(bestSolution);
 
@@ -424,7 +413,12 @@ public class EnRouteRealTime {
     }
 
 
-
+    private static Vehicle getVehicle(String vehicleId, Builder vrpBuilder) {
+        for (Vehicle v : vrpBuilder.getAddedVehicles()) {
+            if (v.getId().equals(vehicleId)) return v;
+        }
+        return null;
+    }
 
 
     public static void main(String[] args) {

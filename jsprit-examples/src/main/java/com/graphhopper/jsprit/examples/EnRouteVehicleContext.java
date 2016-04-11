@@ -1,6 +1,12 @@
 package com.graphhopper.jsprit.examples;
 
+import com.graphhopper.jsprit.core.problem.Location;
 import com.graphhopper.jsprit.core.problem.job.Shipment;
+import com.graphhopper.jsprit.core.problem.vehicle.Vehicle;
+import com.graphhopper.jsprit.core.problem.vehicle.VehicleImpl;
+import com.graphhopper.jsprit.core.problem.vehicle.VehicleType;
+import com.graphhopper.jsprit.core.problem.vehicle.VehicleTypeImpl;
+import com.graphhopper.jsprit.core.util.Coordinate;
 import scala.util.parsing.combinator.testing.Str;
 
 import java.util.ArrayList;
@@ -41,7 +47,6 @@ public class EnRouteVehicleContext {
             }
 
 
-
             this.pickupTimeWindowAlgo = new double[]{
                 pstart,
                 pickupTimeWindowTS[1] - currentTimestamp
@@ -69,6 +74,11 @@ public class EnRouteVehicleContext {
     public double currentTimestamp;
 
     public String vehicleId;
+    public Vehicle vehicle;
+
+    private static Location loc(Coordinate coordinate) {
+        return Location.Builder.newInstance().setCoordinate(coordinate).build();
+    }
 
     public EnRouteVehicleContext(String vehicleId, double currentTimestamp, double[] currentLoc, // some info
 
@@ -85,6 +95,22 @@ public class EnRouteVehicleContext {
                                  String customerAddress
 
     ) {
+        // create a vehicle implementation
+
+
+        VehicleTypeImpl.Builder vehicleTypeBuilder = VehicleTypeImpl.Builder.newInstance("bike")
+            .addCapacityDimension(0, 3);
+        vehicleTypeBuilder.setCostPerDistance(10.0);
+        VehicleType vehicleType = vehicleTypeBuilder.build();
+
+        String staffCurrentCoorStr =  vehicleId + "@[" + currentLoc[0] + "," + currentLoc[1] + "]";
+        VehicleImpl.Builder vehicleBuilder = VehicleImpl.Builder.newInstance(staffCurrentCoorStr);
+        vehicleBuilder.setStartLocation(loc(Coordinate.newInstance(currentLoc[0], currentLoc[1]))).setReturnToDepot(false);
+        vehicleBuilder.setType(vehicleType);
+        vehicleBuilder.addSkill(vehicleId); // make sure the going deli will only be taken by the vehicle
+
+        this.vehicle = vehicleBuilder.build();
+
         // 应该是笛卡尔积但是我他妈懒得写
         assert (pickupLocs.size() == deliverLocs.size() &&
             pickupTimeWindowTSs.size() == deliverTimeWindowTSs.size() &&

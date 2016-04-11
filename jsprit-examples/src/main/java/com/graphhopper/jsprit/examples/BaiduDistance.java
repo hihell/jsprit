@@ -1,5 +1,6 @@
 package com.graphhopper.jsprit.examples;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.graphhopper.jsprit.core.problem.Location;
@@ -7,6 +8,7 @@ import com.graphhopper.jsprit.core.problem.cost.VehicleRoutingActivityCosts;
 import com.graphhopper.jsprit.core.problem.cost.VehicleRoutingTransportCosts;
 import com.graphhopper.jsprit.core.problem.driver.Driver;
 import com.graphhopper.jsprit.core.problem.vehicle.Vehicle;
+import com.graphhopper.jsprit.core.util.Coordinate;
 import com.graphhopper.jsprit.core.util.EuclideanCosts;
 import com.graphhopper.jsprit.core.util.ManhattanCosts;
 import com.sun.tools.javac.util.Pair;
@@ -14,6 +16,7 @@ import com.sun.tools.javah.Util;
 import com.sun.tools.jdi.DoubleTypeImpl;
 import scala.util.parsing.combinator.testing.Str;
 import scala.util.parsing.combinator.token.StdTokens;
+import scala.util.parsing.json.JSONArray;
 import scala.util.parsing.json.JSONObject;
 
 
@@ -49,7 +52,6 @@ public class BaiduDistance implements VehicleRoutingTransportCosts {
         double lat = loc.getCoordinate().getY();
 
 
-
         String strLng = new DecimalFormat("###.###").format(lng);
         String strLat = new DecimalFormat("###.###").format(lat);
 
@@ -79,7 +81,7 @@ public class BaiduDistance implements VehicleRoutingTransportCosts {
     }
 
 
-    public Double getDistanceCache(Location from, Location to){
+    public Double getDistanceCache(Location from, Location to) {
         String strFrom = getCoorString(from);
         String strTo = getCoorString(to);
 
@@ -90,7 +92,7 @@ public class BaiduDistance implements VehicleRoutingTransportCosts {
         Double d2 = distanceCache.get(p2);
         if (d1 != null) {
             return d1;
-        } else if(d2 != null) {
+        } else if (d2 != null) {
             return d2;
         }
 
@@ -108,7 +110,7 @@ public class BaiduDistance implements VehicleRoutingTransportCosts {
         Double d2 = durationCache.get(p2);
         if (d1 != null) {
             return d1;
-        } else if(d2 != null) {
+        } else if (d2 != null) {
             return d2;
         }
 
@@ -126,9 +128,11 @@ public class BaiduDistance implements VehicleRoutingTransportCosts {
         }
 
         try {
-            JsonObject j = getHTML(apiUrl);
+//            JsonObject j = getHTML(apiUrl);
+            JsonObject j  = postLeanCloud(from, to);
 
             double distance = j.getAsJsonObject("result")
+                .getAsJsonObject("result")
                 .getAsJsonArray("routes")
                 .get(0).getAsJsonObject()
                 .get("distance").getAsDouble();
@@ -156,12 +160,18 @@ public class BaiduDistance implements VehicleRoutingTransportCosts {
         }
 
         try {
-            JsonObject j = getHTML(apiUrl);
-            double duration =  j.getAsJsonObject("result")
+//            JsonObject j = getHTML(apiUrl);
+//            double duration = j.getAsJsonObject("result")
+//                .getAsJsonArray("routes")
+//                .get(0).getAsJsonObject()
+//                .get("duration").getAsDouble();
+//
+            JsonObject j = postLeanCloud(from, to);
+            double duration = j.getAsJsonObject("result")
+                .getAsJsonObject("result")
                 .getAsJsonArray("routes")
                 .get(0).getAsJsonObject()
                 .get("duration").getAsDouble();
-
             // save to cache
 
             putDurationCache(from, to, duration);
@@ -219,22 +229,84 @@ public class BaiduDistance implements VehicleRoutingTransportCosts {
             result.append(line);
         }
         rd.close();
-//        return result.toString();
 
         return new JsonParser().parse(result.toString()).getAsJsonObject();
-
     }
+
+    public static JsonObject postLeanCloud(Location from, Location to) throws Exception {
+
+        double fromLng = from.getCoordinate().getX();
+        double fromLat = from.getCoordinate().getY();
+        JsonArray fromj = new JsonArray();
+        fromj.add(fromLat);
+        fromj.add(fromLng);
+
+        double toLng = to.getCoordinate().getX();
+        double toLat = to.getCoordinate().getY();
+        JsonArray toj = new JsonArray();
+        toj.add(toLat);
+        toj.add(toLng);
+
+        JsonObject params = new JsonObject();
+        params.add("from", fromj);
+        params.add("to", toj);
+        params.addProperty("from_region", "北京");
+        params.addProperty("to_region", "北京");
+        params.addProperty("transport_mode", "riding");
+
+        String url = "https://leancloud.cn/1.1/functions/baiduDistanceCoors";
+        URL obj = new URL(url);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+        //add reuqest header
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("charset", "utf-8");
+        con.setRequestProperty("X-LC-Id", "lsreYNDOs3JODLsFbIRKGdDb-gzGzoHsz");
+        con.setRequestProperty("X-LC-Key", "9MNq2j3O2SCTkNbaERmRAWVx");
+        con.setRequestProperty("X-LC-Prod", "0");
+
+        // Send post request
+        con.setDoOutput(true);
+        OutputStreamWriter wr = new OutputStreamWriter(con.getOutputStream());
+        wr.write(params.toString());
+        wr.flush();
+        wr.close();
+
+        BufferedReader in = new BufferedReader(
+            new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+
+        return new JsonParser().parse(response.toString()).getAsJsonObject();
+    }
+
+    private static Location loc(Coordinate coordinate) {
+        return Location.Builder.newInstance().setCoordinate(coordinate).build();
+    }
+
 
     public static void main(String[] args) throws Exception {
         String url = "http://api.map.baidu.com/direction/v1?mode=riding&origin=40.056878,116.30815&destination=39.915285,116.403857&origin_region=%E5%8C%97%E4%BA%AC&destination_region=%E5%8C%97%E4%BA%AC&output=json&ak=o0RuzQRVNo1YuIorz50uWVLs6DXVSo7X";
 //      // get distance j.get("result").get("routes").get(0).get("distance").getAsDouble()
         // get duration j.get("result").get("routes").get(0).get("duration").getAsDouble()
-        JsonObject j = getHTML(url);
-        System.out.println(j.toString());
-
+//        JsonObject j = getHTML(url);
+//        System.out.println(j.toString());
+//
 //        Location from = new Location()
 
+//      在这里顺序是 (x, y) x是longitude, y是latitude, 百度请求的顺序是[latitude, longitude]
+        Location from = loc(Coordinate.newInstance(116.403857, 39.915285));
+        Location to = loc(Coordinate.newInstance(116.30815, 40.056878));
 
+        JsonObject res = postLeanCloud(from, to);
+
+        System.out.println(res.toString());
     }
 
 
