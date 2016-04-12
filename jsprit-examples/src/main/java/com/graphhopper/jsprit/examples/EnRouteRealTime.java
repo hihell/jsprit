@@ -4,7 +4,6 @@ package com.graphhopper.jsprit.examples;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.lang.reflect.Array;
 import java.util.*;
 
 import com.google.gson.JsonObject;
@@ -16,8 +15,6 @@ import com.graphhopper.jsprit.core.algorithm.io.VehicleRoutingAlgorithms;
 import com.graphhopper.jsprit.core.problem.Location;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
 import com.graphhopper.jsprit.core.problem.io.VrpXMLWriter;
-import com.graphhopper.jsprit.core.problem.job.Delivery;
-import com.graphhopper.jsprit.core.problem.job.Pickup;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem.Builder;
 
 import com.graphhopper.jsprit.core.problem.job.Shipment;
@@ -29,11 +26,9 @@ import com.graphhopper.jsprit.core.problem.vehicle.VehicleImpl;
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleType;
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleTypeImpl;
 import com.graphhopper.jsprit.core.reporting.SolutionPrinter;
+import com.graphhopper.jsprit.core.util.BaiduDistance;
 import com.graphhopper.jsprit.core.util.Coordinate;
 import com.graphhopper.jsprit.core.util.Solutions;
-
-import com.graphhopper.jsprit.core.util.ManhattanCosts;
-import sun.jvm.hotspot.code.ConstantOopReadValue;
 
 /**
  * Created by jiusi on 16/4/1.
@@ -219,32 +214,6 @@ public class EnRouteRealTime {
         }
     }
 
-    public void batchProblemBuilder(String inputPath) {
-        // generate shipments
-        EnRouteRealTime r = new EnRouteRealTime();
-
-        r.bizNameCoorMap.put("格林沙拉（自销）", new double[]{39.936935, 116.460901});
-        r.bizNameCoorMap.put("恩之方", new double[]{39.940916, 116.451592});
-        r.bizNameCoorMap.put("念客", new double[]{39.923294, 116.466292});
-        r.bizNameCoorMap.put("拌物沙拉", new double[]{39.916824, 116.462717});
-        r.bizNameCoorMap.put("宇甜品", new double[]{39.936895, 116.460746});
-        r.bizNameCoorMap.put("拌物", new double[]{39.917, 116.463035});
-        r.bizNameCoorMap.put("格林沙拉", new double[]{39.936935, 116.460901});
-        r.bizNameCoorMap.put("匹考克", new double[]{39.924461, 116.45983});
-        r.bizNameCoorMap.put("臻享甜品", new double[]{39.929068, 116.484437});
-        r.bizNameCoorMap.put("爱贝里", new double[]{39.942715, 116.461778});
-        r.bizNameCoorMap.put("仙juice", new double[]{39.92435, 116.463573});
-
-        // make that vrp problem and plot it
-
-        // modify plot function as let it show receiver info
-        ArrayList<ArrayList<JsonObject>> lists = r.readFile(inputPath);
-
-        double[] dormitary = {39.914, 116.502};
-        r.enroute(lists.get(0), 20, dormitary);
-    }
-
-
     public void realTimeProblemBuilder(ArrayList<EnRouteVehicleContext> vehicleContexts, ArrayList<Shipment> newShipments) {
         // 0. get all vehicle's status from API and make EnRouteContext
         // status: picked up, location, all pending plans
@@ -278,7 +247,7 @@ public class EnRouteRealTime {
                 double[] deliTW = onGoingPickUp.deliverTimeWindowAlgo;
 
                 Shipment shipment = Shipment.Builder.newInstance(
-                        onGoingPickUp.customerName + ',' + onGoingPickUp.customerPhone + ',' + onGoingPickUp.customerAddress
+                        "pickup:" + onGoingPickUp.pickupAddress + ", deliver:" + onGoingPickUp.deliverAddress
                     )
                     .addSizeDimension(0, 1)
                     .setPickupLocation(loc(Coordinate.newInstance(pickLoc[0], pickLoc[1])))
@@ -288,33 +257,27 @@ public class EnRouteRealTime {
                     .addRequiredSkill(vehicleId) // make sure this on going deli will only be taken by that vehicle
                     .build();
 
-//                VehicleRoute initialRoute = VehicleRoute.Builder.newInstance(
-//                    vehicleContext.vehicle
-//                ).addPickup(shipment).addDelivery(shipment).build();
-//
-//                vrpBuilder.addInitialVehicleRoute(initialRoute);
                 vrpBuilder.addJob(shipment);
             }
-
         }
 
-        //  1.2.2 setup picked-ups
-        //  use required skill to make sure on going delivery won't be allocated to other vehicles
+        //  1.2.2 setup picked-ups vre on going delivery won't be allocated to other vehicles
         for (int i = 0; i < vehicleContexts.size(); i++) {
             EnRouteVehicleContext vehicleContext = vehicleContexts.get(i);
             String vehicleId = vehicleContext.vehicleId;
-            ArrayList<EnRouteVehicleContext.ShipmentInfo> pickedUps = vehicleContext.pickedups;
+            ArrayList<EnRouteVehicleContext.ShipmentInfo> pickedupShipmentInfos = vehicleContext.pickedups;
 
-            for (int j = 0; j < pickedUps.size(); j++) {
-                EnRouteVehicleContext.ShipmentInfo pickedUp = pickedUps.get(j);
+            for (int j = 0; j < pickedupShipmentInfos.size(); j++) {
+                EnRouteVehicleContext.ShipmentInfo pickedupShipmentInfo = pickedupShipmentInfos.get(j);
 
-                double[] pickUpLoc = pickedUp.pickupLoc;
-                double[] pickUpTW = pickedUp.pickupTimeWindowAlgo;
-                double[] deliLoc = pickedUp.deliverLoc;
-                double[] deliTW = pickedUp.deliverTimeWindowAlgo;
+                // pickup location is the vehicle context location because it picked it up
+                double[] pickUpLoc = vehicleContext.currentLoc;
+                double[] pickUpTW = pickedupShipmentInfo.pickupTimeWindowAlgo;
+                double[] deliLoc = pickedupShipmentInfo.deliverLoc;
+                double[] deliTW = pickedupShipmentInfo.deliverTimeWindowAlgo;
 
                 Shipment shipment = Shipment.Builder.newInstance(
-                    pickedUp.customerName + ',' + pickedUp.customerPhone + ',' + pickedUp.customerAddress
+                    "pickup:" + pickedupShipmentInfo.pickupAddress + ", deliver:" + pickedupShipmentInfo.deliverAddress
                 )
                     .addSizeDimension(0, 1)
                     .setPickupLocation(loc(Coordinate.newInstance(pickUpLoc[0], pickUpLoc[1])))
@@ -324,7 +287,7 @@ public class EnRouteRealTime {
                     .addRequiredSkill(vehicleId)
                     .build();
 
-                VehicleRoute initialRoute = VehicleRoute.Builder.newInstance(
+                VehicleRoute  initialRoute = VehicleRoute.Builder.newInstance(
                     vehicleContext.vehicle
                 ).addPickup(shipment).addDelivery(shipment).build();
 
@@ -357,7 +320,7 @@ public class EnRouteRealTime {
     }
 
 
-    public void solutionWriter(VehicleRoutingProblem problem,
+    public static void solutionWriter(VehicleRoutingProblem problem,
                                Collection<VehicleRoutingProblemSolution> solutions,
                                VehicleRoutingProblemSolution bestSolution) {
         new VrpXMLWriter(problem, solutions).write("output/shipment-problem-with-solution.xml");
@@ -381,9 +344,7 @@ public class EnRouteRealTime {
         solutionPlotter.plotShipments(true);
         solutionPlotter.plot("output/enRoutePickupAndDeliveryWithMultipleLocationsExample_solution.png", "en-route pickup and delivery");
 
-        new GraphStreamViewer(problem, Solutions.bestOf(solutions)).labelWith(GraphStreamViewer.Label.ACTIVITY).setRenderDelay(100).setRenderShipments(true).display();
-
-
+//        new GraphStreamViewer(problem, Solutions.bestOf(solutions)).labelWith(GraphStreamViewer.Label.ACTIVITY).setRenderDelay(100).setRenderShipments(true).display();
     }
 
     public void showAllBizNames(String inputPath) {
@@ -410,14 +371,6 @@ public class EnRouteRealTime {
         }
 
         System.out.println(bizNames.toString());
-    }
-
-
-    private static Vehicle getVehicle(String vehicleId, Builder vrpBuilder) {
-        for (Vehicle v : vrpBuilder.getAddedVehicles()) {
-            if (v.getId().equals(vehicleId)) return v;
-        }
-        return null;
     }
 
 

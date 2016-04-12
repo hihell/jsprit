@@ -25,14 +25,17 @@ public class EnRouteVehicleContext {
         public double[] deliverTimeWindowTS;
         public double[] deliverTimeWindowAlgo;
 
+        // customer here is the receiver
         public String customerName;
         public String customerPhone;
 
-        public String customerAddress;
+        public String pickupAddress;
+        public String deliverAddress;
+
 
         public ShipmentInfo(double[] pickupLoc, double[] deliverLoc,
                             double[] pickupTimeWindowTS, double[] deliverTimeWindowTS,
-                            String customerName, String customerPhone, String customerAddress) {
+                            String customerName, String customerPhone, String pickupAddress, String deliverAddress) {
             this.pickupLoc = pickupLoc;
             this.pickupTimeWindowTS = pickupTimeWindowTS;
 
@@ -59,9 +62,10 @@ public class EnRouteVehicleContext {
                 deliverTimeWindowTS[1] - currentTimestamp
             };
 
-            this.customerAddress = customerAddress;
-            this.customerPhone = customerPhone;
             this.customerName = customerName;
+            this.customerPhone = customerPhone;
+            this.pickupAddress = pickupAddress;
+            this.deliverAddress = deliverAddress;
         }
 
     }
@@ -86,13 +90,13 @@ public class EnRouteVehicleContext {
                                  ArrayList<double[]> pickupLocs, ArrayList<double[]> deliverLocs,
                                  ArrayList<double[]> pickupTimeWindowTSs, ArrayList<double[]> deliverTimeWindowTSs,
                                  ArrayList<String> customerNames, ArrayList<String> customerPhones,
-                                 ArrayList<String> customerAddresses,
+                                 ArrayList<String> pickupAddresses, ArrayList<String> deliverAddresses,
 
                                  // for on going pickup
                                  double[] pickupLoc, double[] deliverLoc,
                                  double[] pickupTimeWindowTS, double[] deliverTimeWindowTS,
                                  String customerName, String customerPhone,
-                                 String customerAddress
+                                 String pickupAddress, String deliverAddress
 
     ) {
         // create a vehicle implementation
@@ -115,7 +119,7 @@ public class EnRouteVehicleContext {
         assert (pickupLocs.size() == deliverLocs.size() &&
             pickupTimeWindowTSs.size() == deliverTimeWindowTSs.size() &&
             customerNames.size() == customerPhones.size() &&
-            pickupLocs.size() == customerAddresses.size()
+            pickupLocs.size() == pickupAddresses.size()
         );
 
         this.vehicleId = vehicleId;
@@ -129,7 +133,7 @@ public class EnRouteVehicleContext {
 
                 ShipmentInfo si = new ShipmentInfo(pickupLocs.get(i), deliverLocs.get(i),
                     pickupTimeWindowTSs.get(i), deliverTimeWindowTSs.get(i),
-                    customerNames.get(i), customerPhones.get(i), customerAddresses.get(i)
+                    customerNames.get(i), customerPhones.get(i), pickupAddresses.get(i), deliverAddresses.get(i)
                 );
 
                 this.pickedups.add(si);
@@ -140,7 +144,7 @@ public class EnRouteVehicleContext {
             // make on going pickup shipment info
             this.onGoingPickUp = new ShipmentInfo(pickupLoc, deliverLoc,
                 pickupTimeWindowTS, deliverTimeWindowTS,
-                customerName, customerPhone, customerAddress
+                customerName, customerPhone, pickupAddress, deliverAddress
             );
 
         }

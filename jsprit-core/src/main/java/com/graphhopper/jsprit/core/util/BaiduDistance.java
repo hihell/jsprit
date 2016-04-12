@@ -1,4 +1,4 @@
-package com.graphhopper.jsprit.examples;
+package com.graphhopper.jsprit.core.util;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -14,10 +14,6 @@ import com.graphhopper.jsprit.core.util.ManhattanCosts;
 import com.sun.tools.javac.util.Pair;
 import com.sun.tools.javah.Util;
 import com.sun.tools.jdi.DoubleTypeImpl;
-import scala.util.parsing.combinator.testing.Str;
-import scala.util.parsing.combinator.token.StdTokens;
-import scala.util.parsing.json.JSONArray;
-import scala.util.parsing.json.JSONObject;
 
 
 import java.io.*;

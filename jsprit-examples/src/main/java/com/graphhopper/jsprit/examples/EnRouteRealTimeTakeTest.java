@@ -7,6 +7,7 @@ import com.graphhopper.jsprit.core.problem.solution.route.activity.TimeWindow;
 import com.graphhopper.jsprit.core.util.Coordinate;
 import com.graphhopper.jsprit.examples.EnRouteRealTime;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 /**
@@ -31,11 +32,13 @@ public class EnRouteRealTimeTakeTest {
         ArrayList<double[]> deliverTimeWindowTSs = new ArrayList<double[]>();
         deliverTimeWindowTSs.add(new double[]{1459998630.0, 1460002224.0}); // 11:10, 12:10
 
+        ArrayList<String> pickupAddresses = new ArrayList<String>();
+        pickupAddresses.add("建外soho B100");
 
         ArrayList<String> customerNames = new ArrayList<String>();
         customerNames.add("摩码大厦小姐");
-        ArrayList<String> customerAddresses = new ArrayList<String>();
-        customerAddresses.add("摩码大厦301");
+        ArrayList<String> deliverAddresses = new ArrayList<String>();
+        deliverAddresses.add("摩码大厦301");
         ArrayList<String> customerPhones = new ArrayList<String>();
         customerPhones.add("123");
 
@@ -46,7 +49,8 @@ public class EnRouteRealTimeTakeTest {
         double[] deliverTimeWindwoTS = {1459999824.0, 1460003424.0}; // 11:30, 12:30
 
         String customerName = "甜水园北里屌丝";
-        String customerAddress = "甜水园北里4栋2单元202";
+        String pickupAddress = "易思凯斯咖啡";
+        String deliverAddress = "甜水园北里4栋2单元202";
         String customerPhone = "444";
 
 
@@ -56,11 +60,11 @@ public class EnRouteRealTimeTakeTest {
 
             pickupLocs, deliverLocs,
             pickupTimeWindowTSs, deliverTimeWindowTSs,
-            customerNames, customerPhones, customerAddresses,
+            customerNames, customerPhones, pickupAddresses, deliverAddresses,
 
             pickupLoc, deliverLoc,
             pickupTimeWindowTS, deliverTimeWindwoTS,
-            customerName, customerPhone, customerAddress
+            customerName, customerPhone, pickupAddress, deliverAddress
         );
 
     }
@@ -81,14 +85,17 @@ public class EnRouteRealTimeTakeTest {
         deliverTimeWindowTSs.add(new double[]{1459998630.0, 1460002224.0}); // 11:10, 12:10
 
 
+        ArrayList<String> pickupAddresses = new ArrayList<String>();
+        pickupAddresses.add("现代城鲜花店");
+
         ArrayList<String> customerNames = new ArrayList<String>();
         customerNames.add("张菊长");
-        ArrayList<String> customerAddresses = new ArrayList<String>();
-        customerAddresses.add("朝阳区人民政府菊长办公室");
+        ArrayList<String> deliverAddresses = new ArrayList<String>();
+        deliverAddresses.add("朝阳区人民政府菊长办公室");
         ArrayList<String> customerPhones = new ArrayList<String>();
         customerPhones.add("110");
 
-        // 2. on going pickup No on going pickup
+        // 2. No on going pickup
 
         return new EnRouteVehicleContext(
             "bike2", currentTimestamp, //11:40
@@ -96,17 +103,17 @@ public class EnRouteRealTimeTakeTest {
 
             pickupLocs, deliverLocs,
             pickupTimeWindowTSs, deliverTimeWindowTSs,
-            customerNames, customerPhones, customerAddresses,
+            customerNames, customerPhones, pickupAddresses, deliverAddresses,
 
             null, null,
             null, null,
-            null, null, null
+            null, null, null, null
         );
 
     }
 
     public Shipment newShipmentWithTW(double[] pickupLoc, double[] deliverLoc, double[] pickupTW, double[] deliverTW,
-                                      String customerName, String customerPhone, String customerAddress, double currentTimestamp) {
+                                      String customerName, String customerPhone, String pickupAddress, String deliverAddress, double currentTimestamp) {
 
         double pstart = pickupTW[0] - currentTimestamp;
         if (pstart < 0) {
@@ -128,9 +135,7 @@ public class EnRouteRealTimeTakeTest {
             deliverTW[1] - currentTimestamp
         };
 
-        // 问题是这里的减法会产出负值, 不知道负值会不会对算法有影响, 这个TW的上界很可能是负数,下界如果是负数那么肯定是超时了
-
-        return Shipment.Builder.newInstance("name:" + customerName + " address:" + customerAddress + " phone:" + customerPhone)
+        return Shipment.Builder.newInstance("pickup:" + pickupAddress + ", deliver:" + deliverAddress)
             .addSizeDimension(0, 1)
             .setPickupLocation(loc(Coordinate.newInstance(pickupLoc[0], pickupLoc[1])))
             .setPickupTimeWindow(new TimeWindow(pickupTimeWindowAlgo[0], pickupTimeWindowAlgo[1]))
@@ -152,11 +157,12 @@ public class EnRouteRealTimeTakeTest {
 
         String customerName =  "嘉里中心 Ovelia de la Wang";
         String customerPhone = "456";
-        String customerAddress = "嘉里中心1107前台";
+        String pickupAddress = "嘉里中心1107前台";
+        String deliverAddress = "日坛商务楼";
 
         return newShipmentWithTW(pickupLoc, deliverLoc,
             pickupTW, deliverTW,
-            customerName, customerPhone, customerAddress, currentTimestamp);
+            customerName, customerPhone, pickupAddress, deliverAddress, currentTimestamp);
     }
 
 
